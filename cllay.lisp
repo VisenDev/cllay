@@ -3,36 +3,36 @@
 (in-package #:cllay)
 
 (defstruct vec2
-  (x 0.0f :type single-float)
-  (y 0.0f :type single-float))
+  (x 0.0f0 :type single-float)
+  (y 0.0f0 :type single-float))
 
 (defstruct dimensions
-  (w 0.0f :type single-float)
-  (h 0.0f :type single-float))
+  (w 0.0f0 :type single-float)
+  (h 0.0f0 :type single-float))
 
 (defstruct color
-  (r 0.0f :type single-float)
-  (g 0.0f :type single-float)
-  (b 0.0f :type single-float)
-  (a 0.0f :type single-float))
+  (r 0.0f0 :type single-float)
+  (g 0.0f0 :type single-float)
+  (b 0.0f0 :type single-float)
+  (a 0.0f0 :type single-float))
 
 (defstruct bounding-box
-  (x 0.0f :type single-float)
-  (y 0.0f :type single-float)
-  (w 0.0f :type single-float)
-  (h 0.0f :type single-float))
+  (x 0.0f0 :type single-float)
+  (y 0.0f0 :type single-float)
+  (w 0.0f0 :type single-float)
+  (h 0.0f0 :type single-float))
 
 (defstruct element-id
   (id 0 :type fixnum)
   (offset 0 :type fixnum)
   (base-id 0 :type fixnum)
-  (string-id 0 :type string))
+  (string-id "" :type string))
 
 (defstruct corner-radius
-  (top-left 0.0f :type single-float)
-  (top-right 0.0f :type single-float)
-  (bottom-left 0.0f :type single-float)
-  (bottom-right 0.0f :type single-float))
+  (top-left 0.0f0 :type single-float)
+  (top-right 0.0f0 :type single-float)
+  (bottom-left 0.0f0 :type single-float)
+  (bottom-right 0.0f0 :type single-float))
 
 (deftype layout-direction () '(member :left-to-right :top-to-bottom))
 
@@ -48,18 +48,18 @@
     :fixed))
 
 (defstruct child-alignment
-  (x 0.0f :type single-float)
-  (y 0.0f :type single-float))
+  (x 0.0f0 :type single-float)
+  (y 0.0f0 :type single-float))
 
 (defstruct sizing-min-max
-  (min 0.0f :type single-float)
-  (max 0.0f :type single-float))
+  (min 0.0f0 :type single-float)
+  (max 0.0f0 :type single-float))
 
 (defstruct sizing-axis size type)
 
 (defstruct sizing
-  (width nil :type sizing-axis)
-  (height nil :type sizing-axis))
+  (width (make-sizing-axis) :type sizing-axis)
+  (height (make-sizing-axis) :type sizing-axis))
 
 (defstruct padding
   (left 0 :type fixnum)
@@ -68,11 +68,11 @@
   (bottom 0 :type fixnum))
 
 (defstruct layout-config
-  (sizing nil :type sizing)
-  (padding nil :type padding)
+  (sizing (make-sizing) :type sizing)
+  (padding (make-padding) :type padding)
   (child-gap 0 :type fixnum)
-  (child-alignment nil :type child-alignment)
-  (layout-direction nil :type layout-direction))
+  (child-alignment (make-child-alignment) :type child-alignment)
+  (layout-direction :left-to-right :type layout-direction))
 
 (deftype text-element-config-wrap-mode ()
   '(member
@@ -80,18 +80,24 @@
     :newlines
     :none))
 
+(deftype text-alignment ()
+  '(member
+    :left
+    :center
+    :right))
+
 (defstruct text-element-config
   userdata
-  (text-color nil :type color)
+  (text-color (make-color) :type color)
   (font-id 0 :type fixnum)
   (font-size 0 :type fixnum)
   (letter-spacing 0 :type fixnum)
-  (line-height 0 :type line-height)
-  (wrap-mode nil :type text-element-config-wrap-mode)
-  (text-alignment nil :type text-alignment))
+  (line-height 0 :type fixnum)
+  (wrap-mode :words :type text-element-config-wrap-mode)
+  (text-alignment :left :type text-alignment))
 
 (defstruct aspect-ratio-element-config
-  (aspect-ratio 0.0f :type single-float))
+  (aspect-ratio 0.0f0 :type single-float))
 
 (defstruct image-element-config
   image-data)
@@ -109,8 +115,8 @@
     :right-bottom))
 
 (defstruct floating-attach-points
-  (element nil :type floating-attach-point-type)
-  (parent nil :type floating-attach-point-type))
+  (element :left-top :type floating-attach-point-type)
+  (parent :left-top :type floating-attach-point-type))
 
 (deftype pointer-capture-mode ()
   '(member :capture :passthrough))
@@ -122,14 +128,14 @@
   '(member :to-none :to-attached-parent))
 
 (defstruct floating-element-config
-  (offset nil :type vec2)
-  (expand nil :type dimensions)
+  (offset (make-vec2) :type vec2)
+  (expand (make-dimensions) :type dimensions)
   (parent-id 0 :type fixnum)
   (z-index 0 :type fixnum)
-  (attach-points nil :type attach-points)
-  (pointer-capture-mode nil :type pointer-capture-mode)
-  (attach-to nil :type floating-attach-to-element)
-  (clip-to nil :type floating-clip-to-element))
+  (attach-points (make-floating-attach-points) :type floating-attach-points)
+  (pointer-capture-mode :capture :type pointer-capture-mode)
+  (attach-to :to-none :type floating-attach-to-element)
+  (clip-to :to-none :type floating-clip-to-element))
 
 (defstruct custom-element-config
   custom-data)
@@ -137,7 +143,7 @@
 (defstruct clip-element-config
   (horizonal nil :type boolean)
   (vertical nil :type boolean)
-  (child-offset nil :type child-offset))
+  (child-offset (make-vec2) :type vec2))
 
 (defstruct border-width
   (left 0 :type fixnum)
@@ -147,15 +153,15 @@
   (between-children 0 :type fixnum))
 
 (defstruct border-element-config
-  (color nil :type color)
-  (width nil :type border-width))
+  (color (make-color) :type color)
+  (width (make-border-width) :type border-width))
 
 (defstruct transition-data
-  (bounding-box nil :type bounding-box)
-  (background-color nil :type color)
-  (overlay-color nil :type color)
-  (border-color nil :type color)
-  (border-width nil :type border-width))
+  (bounding-box (make-bounding-box) :type bounding-box)
+  (background-color (make-color) :type color)
+  (overlay-color (make-color) :type color)
+  (border-color (make-color) :type color)
+  (border-width (make-border-width) :type border-width))
 
 (deftype transition-state ()
   '(member
@@ -211,8 +217,8 @@
   (initial nil :type transition-data)
   (current nil :type transition-data)
   (target nil :type transition-data)
-  (elapsed-type 0.0f :type single-float)
-  (duration 0.0f :type single-float)
+  (elapsed-type 0.0f0 :type single-float)
+  (duration 0.0f0 :type single-float)
   (properties nil :type list))
 
 (deftype transition-enter-trigger-type ()
@@ -250,10 +256,10 @@
 
 (defstruct transition-element-config
   handler ;; (function (transition-callbacl-arguments) boolean)
-  (duration 0.0f :type single-float)
+  (duration 0.0f0 :type single-float)
   (properties nil :type list)
-  (enter (make-transition-element-config-enter :type transition-element-config-enter))
-  (exit (make-transition-element-config-exit :type transition-element-config-exit)))
+  (enter (make-transition-element-config-enter) :type transition-element-config-enter)
+  (exit (make-transition-element-config-exit) :type transition-element-config-exit))
 
 (defstruct text-render-data
   (string-contents "" :type string)
@@ -291,6 +297,7 @@
 
 (deftype render-data ()
   '(or
+    null
     text-render-data
     rectangle-render-data
     image-render-data
@@ -325,7 +332,7 @@
 
 (defstruct render-command
   (bounding-box (make-bounding-box) :type bounding-box)
-  (render-data (make-render-data) :type render-data)
+  (render-data nil :type render-data)
   userdata
   (id 0 :type fixnum)
   (z-index 0 :type fixnum)
@@ -380,4 +387,144 @@
 (defstruct layout-element
   (children (make-layout-element-children) :type layout-element-children)
   (dimensions (make-dimensions) :type dimensions)
-  (min-dimensiosn (make-dimensions) :type dimensions))
+  (min-dimensiosn (make-dimensions) :type dimensions)
+  (config (make-element-declaration) :type element-declaration)
+  (text-config (make-text-element-config) :type text-element-config)
+  (text-element-data (make-text-element-data) :type text-element-data)
+  (id 0 :type fixnum)
+  (floating-children-count 0 :type fixnum)
+  (is-text-element-p nil :type boolean)
+  (exiting-p nil :type boolean))
+
+(defstruct scroll-container-data-internal
+  (layout-element (make-layout-element) :type layout-element)
+  (bounding-box (make-bounding-box) :type bounding-box)
+  (content-size (make-dimensions) :type dimensions)
+  (scroll-origin (make-vec2) :type vec2)
+  (pointer-origin (make-vec2) :type vec2)
+  (scroll-momentum (make-vec2) :type vec2)
+  (scroll-position (make-vec2) :type vec2)
+  (previous-delta (make-vec2) :type vec2)
+  (momentum-time 0.0f0 :type single-float)
+  (element-id 0 :type fixnum)
+  (open-this-frame nil :type boolean)
+  (pointer-scroll-active nil :type boolean))
+
+(defstruct transition-data-internal
+  (initial-state (make-transition-data) :type transition-data)
+  (current-state (make-transition-data) :type transition-data)
+  (target-state (make-transition-data) :type transition-data)
+  (element-this-frame (make-layout-element) :type layout-element)
+  (element-id 0 :type fixnum)
+  (parent-id 0 :type fixnum)
+  (sibling-index 0 :type fixnum)
+  (elapsed-time 0.0f0 :type single-float)
+  (state :idle :type transition-state)
+  (transition-out nil :type boolean)
+  (reparented nil :type boolean)
+  (active-properties nil :type list) ;;list of transition-properties
+  )
+
+(defstruct debug-element-data
+  (collision nil :type boolean)
+  (collapsed nil :type boolean))
+
+(defstruct layout-element-hashmap-item
+  (bounding-box (make-bounding-box) :type bounding-box)
+  (element-id (make-element-id) :type element-id)
+  (layout-element (make-layout-element) :type layout-element)
+  on-hover-function ;; (function (element-id pointer-data t))
+  hover-function-user-data
+  (next-index 0 :type fixnum)
+  (generation 0 :type fixnum)
+  (appeared-this-frame nil :type boolean)
+  (debug-data (make-debug-element-data) :type debug-element-data))
+
+(defstruct measured-word
+  (start-offset 0 :type fixnum)
+  (length 0 :type fixnum)
+  (width 0.0f0 :type single-float)
+  (next 0 :type fixnum))
+
+(defstruct measure-text-cache-item
+  (unwrapped-dimensions (make-dimensions) :type dimensions)
+  (measured-words-start-index 0 :type fixnum)
+  (min-width 0.0f0 :type single-float)
+  ;;hash map data
+  (id 0 :type fixnum)
+  (next-index 0 :type fixnum)
+  (generation 0 :type fixnum))
+
+(defstruct layout-element-tree-node
+  (layout-element (make-layout-element) :type layout-element)
+  (position (make-vec2) :type vec2)
+  (next-child-offset (make-vec2) :type vec2)
+  (parent-moved-this-frame nil :type boolean))
+
+(defstruct layout-element-tree-root
+  (layout-element-index 0 :type fixnum)
+  (parent-id 0 :type fixnum)
+  (clip-element-id 0 :type fixnum)
+  (z-index 0 :type fixnum)
+  (pointer-offset 0 :type fixnum))
+
+(defmacro make-vector (type)
+  `(make-array 0 :element-type ',type :fill-pointer 0 :adjustable t))
+
+(defstruct context
+  (max-element-count 0 :type fixnum)
+  (max-measure-text-cache-word-count 0 :type fixnum)
+  (exiting-elements-length 0 :type fixnum)
+  (exiting-elements-children-length 0 :type fixnum)
+  (warnings-enabled nil :type boolean)
+  (root-resized-last-frame nil :type boolean)
+  ;;  Clay_ErrorHandler errorHandler;
+  ;;  Clay_BooleanWarnings booleanWarnings;
+  ;;  Clay__WarningArray warnings;
+
+  (pointer-info (make-pointer-data) :type pointer-data)
+  (layout-dimensions (make-dimensions) :type dimensions)
+  (dynamic-element-index-base-hash (make-element-id) :type element-id)
+  (dynamic-element-index 0 :type fixnum)
+  (debug-mode-enabled nil :type boolean)
+  (disable-culling nil :type boolean)
+  (external-scroll-handling-enabled nil :type boolean)
+  (debug-selected-element-id 0 :type fixnum)
+  (generation 0 :type fixnum)
+  measure-text-userdata
+  query-scroll-offset-userdata
+
+  (layout-elements (make-vector layout-element) :type (vector layout-element))
+  (render-commands (make-vector render-command) :type (vector render-command))
+  (open-layout-element-stack (make-vector fixnum) :type (vector fixnum))
+  (layout-element-children (make-vector fixnum) :type (vector fixnum))
+  (layout-element-children-buffer (make-vector fixnum) :type (vector fixnum))
+  (reusable-element-index-buffer (make-vector fixnum) :type (vector fixnum))
+  (layout-element-clip-element-ids (make-vector fixnum) :type (vector fixnum))
+
+  (layout-element-id-strings (make-vector string) :type (vector string))
+  (wrapped-text-lines (make-vector wrapped-text-line) :type (vector wrapped-text-line))
+  (layout-element-tree-node-array-1 (make-vector layout-element-tree-node)
+   :type (vector layout-element-tree-node))
+  (layout-element-tree-roots (make-vector layout-element-tree-node)
+   :type (vector layout-element-tree-node))
+  (layout-elements-hashmap-internal (make-hash-table)) ;;    Clay__LayoutElementHashMapItemArray layoutElementsHashMapInternal;
+  (layout-elements-hashmap (make-vector fixnum) :type (vector fixnum))
+  (measure-text-hashmap-internal (make-vector measure-text-cache-item)
+   :type (vector measure-text-cache-item))
+  (measure-text-hashmap-interal-free-list (make-vector fixnum))
+  (measure-text-hashmap (make-vector fixnum))
+  (measured-words (make-vector measured-word))
+  (measured-words-free-list (make-vector fixnum))
+  (open-clip-element-stack (make-vector fixnum))
+  (pointer-over-ids (make-vector element-id))
+  (scroll-container-datas (make-vector scroll-container-data-internal))
+  (transition-datas (make-vector transition-data-internal))
+  (tree-node-visited (make-vector boolean))
+  (dynamic-string-data (make-vector character))
+  (debug-element-data (make-vector debug-element-data)))
+
+;; (defun get-open-layout-element ()
+;;   (let ((ctx (get-current-context)))
+;;     (aref (context-layout))
+;;     ))
