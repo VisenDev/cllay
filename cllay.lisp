@@ -2,6 +2,8 @@
   (:use #:cl))
 (in-package #:cllay)
 
+(declaim (optimize (debug 3)))
+
 (defstruct vec2
   (x 0.0f0 :type single-float)
   (y 0.0f0 :type single-float))
@@ -524,7 +526,89 @@
   (dynamic-string-data (make-vector character))
   (debug-element-data (make-vector debug-element-data)))
 
-;; (defun get-open-layout-element ()
-;;   (let ((ctx (get-current-context)))
-;;     (aref (context-layout))
-;;     ))
+(declaim (ftype (function (vector) fixnum) array-length))
+(defun array-length (array)
+  (array-dimension array 0))
+
+(declaim (ftype (function (vector integer) t) array-reverse-reference))
+(defun array-reverse-reference (array index-from-end)
+  (aref array (- (array-length array) index-from-end)))
+
+(declaim (ftype (function (vector) t) array-top))
+(defun array-top (array)
+  (array-reverse-reference array 1))
+
+;;;; ==== CTX ====
+(defparameter *ctx* nil)
+
+(defun get-open-layout-element ()
+  (aref (context-layout-elements *ctx*)
+        (array-top (context-open-layout-element-stack *ctx*))))
+
+(defun get-parent-element ()
+  (aref (context-layout-elements *ctx*)
+        (array-reverse-reference (context-open-layout-element-stack *ctx*) 2)))
+
+(defun get-parent-element-id ()
+  (layout-element-id (get-parent-element)))
+
+(defun border-has-any-width-p (border-config)
+  (let ((w (border-element-config-width border-config)))
+    (or (> (border-width-left w) 0)
+        (> (border-width-right w) 0)
+        (> (border-width-top w) 0)
+        (> (border-width-bottom w) 0))))
+
+(defun hash-number (offset seed)
+  (let* ((hash seed)
+         (hash (+ hash (+ offset 40)))
+         (hash (ash hash 10))
+         (hash (logxor hash (ash hash -6)))
+
+         (hash (+ hash (ash hash 3)))
+         (hash (logxor (ash hash -11)))
+         (hash (+ hash (ash hash 15))))
+    (make-element-id :id (1+ hash) :offset offset :base-id seed :string-id "")))
+
+(defmacro logxorf (place number)
+  `(setf ,place (logxor ,place ,number)))
+
+(defun hash-string (key seed)
+  (let ((hash seed))
+    (loop :for ch :across key
+          :for code = (char-code ch)
+          :do (incf hash code)
+              (incf hash (ash hash 10))
+              (logxorf hash (ash hash -6)))
+    (incf hash (ash hash 3))
+    (logxorf hash (ash hash -11))
+    (incf hash (ash hash 15))
+    (make-element-id :id (1+ hash) :offset 0 :base-id (1+ hash) :string-id key)))
+
+(defun hash-string-with-offset (key offset seed)
+  (let ((hash 0)
+        (base seed))
+    (loop :for ch :across key
+          :for code = (char-code ch)
+          :do (incf base code)
+              (incf base (ash base 10))
+              (logxorf base (ash base -6)))
+    (setf hash base)
+    (incf hash offset)
+    (incf hash (ash hash 10))
+    (logxorf hash (ash hash -6))
+    
+    (incf hash (ash hash 3))
+    (incf base (ash base 3))
+    (logxorf hash (ash hash -11))
+    (logxorf base (ash base -11))
+    (incf hash (ash hash 15))
+    (incf base (ash base 15))
+    (make-element-id :id (1+ hash) :offset offset :base-id (1+ base) :string-id key)))
+
+
+;; uint64_t Clay__HashData(const uint8_t* data, size_t length)
+(defun hash-data (data)
+  (sxhash data))
+
+;; LINE 1591 in clay.h
