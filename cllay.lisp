@@ -528,7 +528,7 @@
 
 (declaim (ftype (function (vector) fixnum) array-length))
 (defun array-length (array)
-  (array-dimension array 0))
+  (fill-pointer array))
 
 (declaim (ftype (function (vector integer) t) array-reverse-reference))
 (defun array-reverse-reference (array index-from-end)
@@ -606,9 +606,56 @@
     (incf base (ash base 15))
     (make-element-id :id (1+ hash) :offset offset :base-id (1+ base) :string-id key)))
 
+(defun hash-data (data)
+  (loop
+    :with hash = 0
+    :for ch :across data
+    :for code = (char-code ch)
+    :do (incf hash code)
+        (incf hash (ash hash 10))
+        (logxorf hash (ash hash -6))
+    :finally (return hash)))
 
 ;; uint64_t Clay__HashData(const uint8_t* data, size_t length)
-(defun hash-data (data)
-  (sxhash data))
+(defun hash-string-contents-with-config (text config)
+  (let ((hash (hash-data text)))
+    (incf hash (text-element-config-font-id config))
+    (incf hash (ash hash 10))
+    (logxorf hash (ash hash -6))
 
-;; LINE 1591 in clay.h
+    (incf hash (text-element-config-font-size config))
+    (incf hash (ash hash 10))
+    (logxorf hash (ash hash -6))
+
+    (incf hash (text-element-config-letter-spacing config))
+    (incf hash (ash hash 10))
+    (logxorf hash (ash hash -6))
+
+    (incf hash (ash hash 3))
+    (logxorf hash (ash hash -11))
+    (incf hash (ash hash 15))
+    
+    (1+ hash)))
+
+(declaim (ftype (function (vector) t) array-pop))
+(defun array-pop (array)
+  (assert (> (array-length array) 0))
+  (let ((item (array-top array)))
+    (decf (fill-pointer array))
+    item))
+
+(declaim (ftype (function (measured-word measured-word) measured-word) add-measured-word))
+(defun add-measured-word (word previous-word)
+  (cond
+    ((> (array-length (context-measured-words-free-list *ctx*)) 0)
+     (let ((new-item-index (array-pop (context-measured-words-free-list *ctx*))))
+       (setf (aref (context-measured-words *ctx*) new-item-index) word)
+       (setf (measured-word-next previous-word) new-item-index)
+       (return-from add-measured-word
+         (aref (context-measured-words *ctx*) new-item-index))))
+    (t
+     (setf (measured-word-next previous-word) (array-length (context-measured-words *ctx*)))
+     (vector-push-extend word (context-measured-words *ctx*))
+     (return-from add-measured-word (array-top (context-measured-words *ctx*))))))
+
+()
