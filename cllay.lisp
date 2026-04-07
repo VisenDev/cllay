@@ -673,3 +673,44 @@
        (<= (vec2-x point) (+ (bounding-box-x rect) (bounding-box-w rect)))
        (>= (vec2-y point) (bounding-box-y rect))
        (<= (vec2-y point) (+ (bounding-box-y rect) (bounding-box-h rect)))))
+
+
+(declaim (ftype (function (layout-element) t) update-aspect-ratio-box))
+(defun update-aspect-ratio-box (layout-element)
+  (let ((aspect-ratio (aspect-ratio-element-config-aspect-ratio
+                       (element-declaration-aspect-ratio
+                        (layout-element-config layout-element)))))
+    (unless (zerop aspect-ratio)
+      (let ((d (layout-element-dimensions layout-element)))
+        (cond ((and (zerop (dimensions-w d))
+                    (not (zerop (dimensions-h d))))
+               (setf (dimensions-w d) (* aspect-ratio (dimensions-h d))))
+              ((and (zerop (dimensions-h d))
+                    (not (zerop (dimensions-w d))))
+               (setf (dimensions-h d) (* aspect-ratio (dimensions-w d)))))))))
+
+(defun close-element ()
+  (let* ((open-layout-element (get-open-layout-element))
+         (declaration  (layout-element-config open-layout-element))
+         (layout-config (element-declaration-layout declaration))
+         (element-has-clip-horizontal (clip-element-config-horizonal
+                                       (element-declaration-clip declaration)))
+         (element-has-clip-vertical (clip-element-config-vertical
+                                       (element-declaration-clip declaration)))
+         (attach-to (floating-element-config-attach-to (element-declaration-floating))))
+    (when (or element-has-clip-horizontal
+              element-has-clip-vertical
+              (not (eq attach-to :to-none)))
+      (decf (fill-pointer (context-open-clip-element-stack *ctx*))))
+
+    (let* ((pad (layout-config-padding layout-config))
+           (left-right-padding (+ (padding-left pad) (padding-right pad)))
+           (top-bottom-padding (+ (padding-top pad) (padding-bottom pad))))
+      (setf (layout-element-children-elements
+             (layout-element-children open-layout-element))
+            
+            (fill-pointer) (context-layout-element-children *ctx*))
+      )
+    )
+
+  )
