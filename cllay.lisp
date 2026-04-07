@@ -658,4 +658,18 @@
      (vector-push-extend word (context-measured-words *ctx*))
      (return-from add-measured-word (array-top (context-measured-words *ctx*))))))
 
-()
+(defparameter *clay-measure-text* nil "(function (string text-element-config t) dimensions)")
+
+;; (defun measure-test-cached (text config)
+;;   (assert *clay-measure-text*)
+
+;;   (let ((id (hash-string-contents-with-config text config))
+;;         (hash-bucket )))
+;;   )
+
+(declaim (ftype (function (vec2 bounding-box) boolean) point-is-inside-rect))
+(defun point-is-inside-rect (point rect)
+  (and (>= (vec2-x point) (bounding-box-x rect))
+       (<= (vec2-x point) (+ (bounding-box-x rect) (bounding-box-w rect)))
+       (>= (vec2-y point) (bounding-box-y rect))
+       (<= (vec2-y point) (+ (bounding-box-y rect) (bounding-box-h rect)))))
